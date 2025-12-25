@@ -626,6 +626,24 @@ export default class ToolGroup {
     let cursorName;
     let cursor;
 
+    // uiEnhance
+    const runtimeSettings = Settings.getRuntimeSettings();
+    if (runtimeSettings.get('enableUiEnhance')) {
+      if (
+        toolName === 'Pan' ||
+        toolName === 'StackScroll' ||
+        toolName === 'WindowLevel'
+      ) {
+        cursor = MouseCursor.getDefinedCursor('default');
+        return cursor;
+      }
+
+      cursorName = `AnnotationPencil`;
+
+      cursor = SVGMouseCursor.getDefinedCursor(cursorName, false);
+      return cursor;
+    }
+
     if (strategyName) {
       // Try combinations with strategyName first:
       // Try with toolName and toolInstanceName first.

@@ -19,6 +19,7 @@ import segmentationRepresentationModifiedListener from './eventListeners/segment
 import { setConfig } from './config';
 import type { Config } from './config';
 import segmentationRemovedListener from './eventListeners/segmentation/segmentationRemovedEventListener';
+import { version } from './version';
 
 let csToolsInitialized = false;
 
@@ -28,6 +29,7 @@ let csToolsInitialized = false;
  * @param defaultConfiguration - A configuration object that will be used to
  * initialize the tool.
  */
+
 export function init(defaultConfiguration = {} as Config): void {
   if (csToolsInitialized) {
     return;

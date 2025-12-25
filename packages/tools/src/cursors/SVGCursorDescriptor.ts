@@ -6,19 +6,22 @@ import type { SVGCursorDescriptor } from '../types';
 
 const BASE: SVGCursorDescriptor = {
   iconContent: '',
-  iconSize: 16,
+  iconSize: 32,
   viewBox: {
     x: 16,
     y: 16,
   },
   mousePoint: {
-    x: 8,
-    y: 8,
+    x: 0,
+    y: 32,
   },
   mousePointerGroupString: `
     <path stroke="{{color}}" d="M8 16L8 0"></path>
     <path stroke="{{color}}" d="M16 8L0 8"></path>
   `,
+  // mousePointerGroupString: `
+  //   <path stroke="{{color}}" d="M8 16L8 0"></path>
+  // `,
 };
 
 const SEGMENTATION_CURSOR_BOUNDARIES = {
@@ -191,11 +194,11 @@ const CursorSVG: Record<string, SVGCursorDescriptor> = {
   Length: extend(BASE, {
     name: 'Length',
     iconContent: `<g id="length-group" fill="none" stroke-width="1" stroke="{{color}}" stroke-linecap="round" stroke-linejoin="round">
-    <path id="length-dashes" d="m22.5,6 -16.5,16.5" stroke-width="3" stroke-dasharray="0.6666,5" />
-  </g>`,
+      <path id="length-dashes" d="m22.5,6 -16.5,16.5" stroke-width="3" stroke-dasharray="0.6666,5" />
+    </g>`,
     viewBox: {
-      x: 24,
-      y: 24,
+      x: 28,
+      y: 28,
     },
   }),
   Height: extend(BASE, {
@@ -317,10 +320,10 @@ const CursorSVG: Record<string, SVGCursorDescriptor> = {
   StackScroll: extend(BASE, {
     name: 'StackScroll',
     iconContent: `<path fill="{{color}}" d="M24 21v2c0 0.547-0.453 1-1 1h-22c-0.547
-    0-1-0.453-1-1v-2c0-0.547 0.453-1 1-1h22c0.547 0 1 0.453 1 1zM24 13v2c0
-    0.547-0.453 1-1 1h-22c-0.547 0-1-0.453-1-1v-2c0-0.547 0.453-1 1-1h22c0.547
-    0 1 0.453 1 1zM24 5v2c0 0.547-0.453 1-1 1h-22c-0.547
-    0-1-0.453-1-1v-2c0-0.547 0.453-1 1-1h22c0.547 0 1 0.453 1 1z" />`,
+  0-1-0.453-1-1v-2c0-0.547 0.453-1 1-1h22c0.547 0 1 0.453 1 1zM24 13v2c0
+  0.547-0.453 1-1 1h-22c-0.547 0-1-0.453-1-1v-2c0-0.547 0.453-1 1-1h22c0.547
+  0 1 0.453 1 1zM24 5v2c0 0.547-0.453 1-1 1h-22c-0.547
+  0-1-0.453-1-1v-2c0-0.547 0.453-1 1-1h22c0.547 0 1 0.453 1 1z" />`,
     viewBox: {
       x: 24,
       y: 28,
@@ -451,6 +454,25 @@ const CursorSVG: Record<string, SVGCursorDescriptor> = {
     name: 'CircleScissor.FILL_OUTSIDE',
     iconContent: `${CIRCLE_ICON} ${PLUS_RECT}`,
     viewBox: SEGMENTATION_CURSOR_BOUNDARIES,
+  }),
+  // Add UiEnhance annotation pencil
+  AnnotationPencil: extend(BASE, {
+    name: 'AnnotationPencil',
+    iconContent: `
+    <g stroke="{{color}}">
+      <path d="M19.7201 3.25977C20.0379 2.88416 20.4311 2.57843 20.8745 2.36206C21.3179 2.14568 21.8019 2.02341 22.2955 2.00305C22.7892 1.98268 23.2817 2.06465 23.7416 2.24375C24.2016 2.42285 24.6189 2.69514 24.9671 3.04327C25.3152 3.39139 25.5865 3.80772 25.7636 4.26571C25.9407 4.7237 26.0198 5.21331 25.9958 5.70334C25.9718 6.19336 25.8453 6.67304 25.6243 7.11182C25.4032 7.55059 25.0926 7.93883 24.7121 8.25179L7.86403 25.0999L1 26.9719L2.87201 20.1078L19.7201 3.25977Z" fill="white" stroke="black" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17.224 5.7558L22.2161 10.7478Z" fill="white"/>
+      <path d="M17.224 5.7558L22.2161 10.7478" stroke="black" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14.728 8.2518L19.72 13.2438Z" fill="white"/>
+      <path d="M14.728 8.2518L19.72 13.2438" stroke="black" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9.73602 18.2358L12.232 20.7319Z" fill="white"/>
+      <path d="M9.73602 18.2358L12.232 20.7319" stroke="black" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    `,
+    viewBox: {
+      x: 28,
+      y: 28,
+    },
   }),
 };
 

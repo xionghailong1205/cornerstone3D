@@ -7,7 +7,7 @@ import { getStyleProperty } from '../stateManagement/annotation/config/helpers';
 import type { StyleSpecifier } from '../types/AnnotationStyle';
 import type { SVGCursorDescriptor } from '../types';
 
-const PROPERTY = 'color';
+const PROPERTY = 'cursorColor';
 const STATE = AnnotationStyleStates.Highlighted;
 const MODE = ToolModes.Active;
 

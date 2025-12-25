@@ -41,6 +41,12 @@ export default function customCallbackHandler(
    * - active
    * - has the custom callback function
    *
+   * 遍历工具组，直到找到满足以下条件的工具
+   *
+   * 处于活动状态
+   *
+   * -具有自定义回调函数
+   *
    */
   let activeTool;
   const toolGroupToolNames = Object.keys(toolGroup.toolOptions);
@@ -56,6 +62,7 @@ export default function customCallbackHandler(
       tool.mode === Active &&
       // TODO: Should be implements interface?
       // Weird that we need concrete instance. Other options to filter / get callback?
+      // 奇怪的是，我们居然需要具体的实例。还有其他方法可以过滤/获取回调吗？
       typeof toolInstance[customFunction] === 'function'
     ) {
       activeTool = toolGroup.getToolInstance(toolName);

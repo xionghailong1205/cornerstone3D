@@ -5,7 +5,7 @@
     "paths": {
       "@cornerstonejs/core": ["core/src"],
       "@cornerstonejs/tools": ["tools/src"],
-      "@cornerstonejs/dicomImageLoader": ["dicomImageLoader/src"],
+      "@cornerstonejs/dicom-image-loader": ["dicomImageLoader/src"],
       "@cornerstonejs/nifti-volume-loader": ["nifti-volume-loader/src"],
       "@cornerstonejs/ai": ["ai/src"],
       "@cornerstonejs/labelmap-interpolation": ["labelmap-interpolation/src"],

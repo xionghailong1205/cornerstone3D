@@ -53,6 +53,8 @@ export default class MouseCursor {
 
   addFallbackStyleProperty(style: string): string {
     const { fallback } = this;
+    console.log(style);
+
     if (fallback instanceof MouseCursor) {
       return `${style}, ${fallback.getStyleProperty()}`;
     }

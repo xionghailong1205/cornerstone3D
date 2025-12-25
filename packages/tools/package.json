@@ -6,7 +6,7 @@
   "module": "./dist/esm/index.js",
   "repository": "https://github.com/cornerstonejs/cornerstone3D",
   "files": [
-    "./dist/"
+    "dist"
   ],
   "directories": {
     "test": "test"
@@ -93,7 +93,7 @@
     "build": "yarn run build:esm",
     "clean": "rm -rf node_modules/.cache/storybook && shx rm -rf dist",
     "clean:deep": "yarn run clean && shx rm -rf node_modules",
-    "dev": "tsc --project ./tsconfig.json --watch",
+    "dev": "tsc-watch --project ./tsconfig.json --onSuccess \"yalc publish --push\"",
     "lint": "oxlint .",
     "api-check": "api-extractor --debug run ",
     "prepublishOnly": "yarn run build",
