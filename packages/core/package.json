@@ -6,7 +6,7 @@
   "types": "./dist/esm/index.d.ts",
   "repository": "https://github.com/cornerstonejs/cornerstone3D",
   "files": [
-    "./dist/"
+    "dist"
   ],
   "sideEffects": false,
   "exports": {

@@ -16,6 +16,7 @@ export default function getToolsWithModesForMouseEvent(
   modesFilter: ModesFilter,
   evtButton?: number
 ) {
+  // 从事件中提取视图 ID，并获取管理该试图所有工具的 ToolGroup (工具组)。如果没有工具组，直接返回空数组。
   const { renderingEngineId, viewportId } = evt.detail;
   const toolGroup = getToolGroupForViewport(viewportId, renderingEngineId);
 

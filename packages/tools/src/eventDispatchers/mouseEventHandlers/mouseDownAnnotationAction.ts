@@ -12,16 +12,17 @@ import type { AnnotationTool } from '../../tools';
 const { Active, Passive } = ToolModes;
 
 /**
- * Look for active or passive annotations with an action that could handle the
- * event based on the bindings and invoke the first one found.
+ * 查找具有基于绑定可处理该事件的动作的活动或被动注释，并调用找到的第一个。
+ * 这通常用于处理像 “点击选中标注”、“点击删除标注” 或者其他自定义的交互行为，而不是创建新标注。
  *
- * @param evt - The normalized mouseDown event.
- * @returns True if an action has executed or false otherwise
+ * @param evt - 标准化的 mouseDown 事件。
+ * @returns 如果已执行动作则返回 true，否则返回 false
  */
+// TODO: 我们之后可以对这个功能做一个升级！
 export default function mouseDownAnnotationAction(
   evt: EventTypes.MouseDownEventType
 ): boolean {
-  // If a tool has locked the current state it is dealing with an interaction within its own eventLoop.
+  // 如果一个工具锁定了当前状态，则说明它正在处理自身事件循环中的交互。
   if (state.isInteractingWithTool) {
     return false;
   }

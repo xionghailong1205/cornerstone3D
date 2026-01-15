@@ -112,6 +112,7 @@ const doubleClickState: IDoubleClickState = {
 /**
  * Listens to mouse down events from the DOM and depending on interaction and further
  * interaction can emit the following mouse events:
+ * 监听 DOM 中的鼠标按下事件，并根据交互情况和后续交互可以触发以下鼠标事件：
  *
  * - MOUSE_DOWN
  * - MOUSE_DOWN_ACTIVATE
@@ -135,6 +136,7 @@ function mouseDownListener(evt: MouseEvent) {
 
     // Record the second button or the changed button event as the initial
     // button down state so that the multi-button event can be detected
+    // 将第二个按钮或按钮状态改变后的事件记录为初始按钮按下状态，以便检测 multi-button 事件
     doubleClickState.mouseDownEvent = evt;
 
     // If second button is added, then ensure double click timeout is terminated
@@ -144,10 +146,16 @@ function mouseDownListener(evt: MouseEvent) {
   }
 
   // Handle multi-button clicks by adding a delay before handling them.
+  // 处理多键点击事件时，应在处理前添加延迟。
   // Double clicks (left button only) physically take the user longer, so
   // use a longer timeout, and for multi-button at the same time, the clicks
   // are done at the same time by the user, just the system perceives them
   // separately, so have a short timeout to allow catching both buttons.
+  // 双击 (仅左键) 实际上需要用户花费更长时间，因此应使用较长的超时时间；
+  // 对于同时点击多个按钮的情况，点击操作 虽然是用户同时完成的额，但系统会将它们分开感知，
+  // 因此需要设置较短的超时时间，以便系统能够同时捕捉到两个按钮的操作，
+
+  //
   doubleClickState.doubleClickTimeout = setTimeout(
     _doStateMouseDownAndUp,
     evt.buttons === 1 ? DOUBLE_CLICK_TOLERANCE_MS : MULTI_BUTTON_TOLERANCE_MS
@@ -155,6 +163,7 @@ function mouseDownListener(evt: MouseEvent) {
 
   // First mouse down of a potential double click. So save it and start
   // a timeout to determine a double click.
+  // 首次鼠标按下可能意味着双击。因此，保存设置超时时间来判断是否发生双击。
   doubleClickState.mouseDownEvent = evt;
   doubleClickState.ignoreDoubleClick = false;
 
@@ -187,6 +196,7 @@ function mouseDownListener(evt: MouseEvent) {
 /**
  * Does the actual mouse down logic if the double click timer has expired or
  * a mouse drag has started.
+ * 如果双击计时器已到期或鼠标拖动已开始，则执行实际的鼠标按下逻辑。
  * @param evt the mouse down event
  * @private
  */
@@ -392,8 +402,11 @@ function _preventClickHandler() {
  *
  * This function should be invoked whenever it is determined that the latest
  * sequence of mouse down(s) and up(s) is NOT a double click. Examples of this include
+ * 当确定最新的鼠标按下和抬起序列不是双击时，应调用此函数
  * - the expiration of the double click timeout
+ * - 双击超时
  * - a mouse drag/move beyond the DOUBLE_CLICK_DRAG_TOLERANCE
+ * - 鼠标拖动/移动超过 DOUBLE_CLICK_DRAG_TOLERANCE 值
  *
  * This function sets the doubleClickState.ignoreDoubleClick flag in case our timeout value
  * or mouse move/drag tolerance is inaccurate and we do indeed get a double click event from
@@ -424,6 +437,8 @@ function _doStateMouseDownAndUp() {
 /**
  * Clears the mouse events and double click timeout id in the double click state object.
  * The timeout itself is also cleared so that no callback is invoked.
+ *
+ * 清除双击状态对象中的鼠标事件和双击超时 ID。超时本身也会被清除，因此不会调用任何回调函数。
  */
 function _clearDoubleClickTimeoutAndEvents() {
   if (doubleClickState.doubleClickTimeout) {

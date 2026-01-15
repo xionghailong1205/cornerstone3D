@@ -9,6 +9,7 @@ import type {
 import {
   setAnnotationSelected,
   isAnnotationSelected,
+  getAnnotationsSelected,
 } from '../../stateManagement/annotation/annotationSelection';
 
 import { isAnnotationLocked } from '../../stateManagement/annotation/annotationLocking';
@@ -51,6 +52,7 @@ const { Active, Passive } = ToolModes;
  */
 export default function mouseDown(evt: EventTypes.MouseDownEventType) {
   // If a tool has locked the current state it is dealing with an interaction within its own eventLoop.
+  // 首先，它会检查当前是否已经有工具处于交互状态（例如正在拖拽中），如果有则直接忽略新的点击。
   if (state.isInteractingWithTool) {
     return;
   }
@@ -59,14 +61,20 @@ export default function mouseDown(evt: EventTypes.MouseDownEventType) {
 
   // Check for preMouseDownCallbacks,
   // If the tool claims it consumed the event, prevent further checks.
+  // 如果活动工具有 preMouseDownCallback 并且它消耗了事件，则阻止进一步的检查。
   if (activeTool && typeof activeTool.preMouseDownCallback === 'function') {
     const consumedEvent = activeTool.preMouseDownCallback(evt);
 
+    // 事实上大部分工具这里会返回 false
     if (consumedEvent) {
       return;
     }
   }
 
+  // 筛选候选工具
+  // 函数会搜集所有可能响应该事件的工具：
+  // Active Tools: 绑定了当前按键的激活工具。
+  // Passive Tools: 如果是左键点击，也会包含被动工具（通常用于选择或悬停效果）。
   // Find all tools that might respond to this mouse down
   const isPrimaryClick = evt.detail.event.buttons === 1;
   const activeToolsWithEventBinding = getToolsWithModesForMouseEvent(
@@ -84,6 +92,7 @@ export default function mouseDown(evt: EventTypes.MouseDownEventType) {
 
   // Actions need to run before tool/handle selected callbacks otherwise actions
   // like the one from SplineTool to remove/add control points would not work.
+  // Action 必须在 工具/句柄 选定回调之前运行，否则操作类似 SplineTool 中移除/添加控制点的操作将无法工作。
   const actionExecuted = mouseDownAnnotationAction(evt);
 
   if (actionExecuted) {

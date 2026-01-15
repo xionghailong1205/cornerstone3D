@@ -11,6 +11,7 @@ import {
   Enums,
   eventTarget,
   getEnabledElementByIds,
+  getRenderingEngine,
   getRenderingEngines,
 } from '@cornerstonejs/core';
 import { filterViewportsWithToolEnabled } from '../utilities/viewportFilters';
@@ -120,6 +121,8 @@ class OrientationMarkerTool extends BaseTool {
               'https://raw.githubusercontent.com/Slicer/Slicer/80ad0a04dacf134754459557bf2638c63f3d1d1b/Base/Logic/Resources/OrientationMarkers/Human.vtp',
           },
         } as OverlayConfiguration,
+        // orientationMarker 关联的 渲染引擎
+        relatedRenderingEngineId: '',
       },
     }
   ) {
@@ -180,72 +183,74 @@ class OrientationMarkerTool extends BaseTool {
       });
     };
 
-    eventTarget.removeEventListener(Events.TOOLGROUP_VIEWPORT_ADDED, (evt) => {
-      if (evt.detail.toolGroupId !== this.toolGroupId) {
-        return;
-      }
-      unsubscribe();
-      this.initViewports();
-    });
+    unsubscribe();
+
+    eventTarget.removeEventListener(
+      Events.TOOLGROUP_VIEWPORT_ADDED,
+      this.handleNewToolGroup
+    );
   }
 
-  _subscribeToViewportEvents() {
-    const subscribeToElementResize = () => {
-      const viewportsInfo = this._getViewportsInfo();
-      viewportsInfo.forEach(({ viewportId, renderingEngineId }) => {
-        const { viewport } = getEnabledElementByIds(
-          viewportId,
-          renderingEngineId
-        );
-        const { element } = viewport;
-        this.initViewports();
-
-        element.addEventListener(
-          Enums.Events.VOLUME_VIEWPORT_NEW_VOLUME,
-          this.initViewports.bind(this)
-        );
-
-        const resizeObserver = new ResizeObserver(() => {
-          // Todo: i wish there was a better way to do this
-          setTimeout(() => {
-            const element = getEnabledElementByIds(
-              viewportId,
-              renderingEngineId
-            );
-            if (!element) {
-              return;
-            }
-            const { viewport } = element;
-            this.resize(viewportId);
-            viewport.render();
-          }, 100);
-        });
-
-        resizeObserver.observe(element);
-
-        this._resizeObservers.set(viewportId, resizeObserver);
-      });
-    };
-
-    subscribeToElementResize();
-
-    eventTarget.addEventListener(Events.TOOLGROUP_VIEWPORT_ADDED, (evt) => {
-      if (evt.detail.toolGroupId !== this.toolGroupId) {
-        return;
-      }
-
-      subscribeToElementResize();
+  subscribeToElementResize = () => {
+    const viewportsInfo = this._getViewportsInfo();
+    viewportsInfo.forEach(({ viewportId, renderingEngineId }) => {
+      const { viewport } = getEnabledElementByIds(
+        viewportId,
+        renderingEngineId
+      );
+      const { element } = viewport;
       this.initViewports();
+
+      element.addEventListener(
+        Enums.Events.VOLUME_VIEWPORT_NEW_VOLUME,
+        this.initViewports.bind(this)
+      );
+
+      const resizeObserver = new ResizeObserver(() => {
+        // Todo: i wish there was a better way to do this
+        setTimeout(() => {
+          const element = getEnabledElementByIds(viewportId, renderingEngineId);
+          if (!element) {
+            return;
+          }
+          const { viewport } = element;
+          this.resize(viewportId);
+          viewport.render();
+        }, 100);
+      });
+
+      resizeObserver.observe(element);
+
+      this._resizeObservers.set(viewportId, resizeObserver);
     });
+  };
+
+  handleNewToolGroup = (evt) => {
+    if (evt.detail.toolGroupId !== this.toolGroupId) {
+      return;
+    }
+    this.subscribeToElementResize();
+    this.initViewports();
+  };
+
+  _subscribeToViewportEvents() {
+    this.subscribeToElementResize();
+
+    eventTarget.addEventListener(
+      Events.TOOLGROUP_VIEWPORT_ADDED,
+      this.handleNewToolGroup
+    );
   }
 
   private cleanUpData() {
-    const renderingEngines = getRenderingEngines();
-    const renderingEngine = renderingEngines[0];
+    const renderingEngine = getRenderingEngine(
+      this.configuration.relatedRenderingEngineId
+    );
     const viewports = renderingEngine.getViewports();
 
     viewports.forEach((viewport) => {
       const orientationMarker = this.orientationMarkers[viewport.id];
+
       if (!orientationMarker) {
         return;
       }
@@ -267,8 +272,10 @@ class OrientationMarkerTool extends BaseTool {
   }
 
   private initViewports() {
-    const renderingEngines = getRenderingEngines();
-    const renderingEngine = renderingEngines[0];
+    const relatedRenderingEngineId =
+      this.configuration.relatedRenderingEngineId;
+
+    const renderingEngine = getRenderingEngine(relatedRenderingEngineId);
 
     if (!renderingEngine) {
       return;
