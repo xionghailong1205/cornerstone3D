@@ -11,6 +11,7 @@ import type {
   IImageVolume,
   IVolumeInput,
   OrientationVectors,
+  Point2,
   Point3,
   EventTypes,
   ViewReference,
@@ -31,6 +32,7 @@ import type { ImageActor } from '../types/IActor';
 import getImageSliceDataForVolumeViewport from '../utilities/getImageSliceDataForVolumeViewport';
 import { transformCanvasToIJK } from '../utilities/transformCanvasToIJK';
 import { transformIJKToCanvas } from '../utilities/transformIJKToCanvas';
+import transformIndexToWorld from '../utilities/transformIndexToWorld';
 import type vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import getVolumeViewportScrollInfo from '../utilities/getVolumeViewportScrollInfo';
 import {
@@ -699,6 +701,174 @@ class VolumeViewport extends BaseVolumeViewport {
       sliceToIndexMatrix,
       indexToSliceMatrix,
     };
+  }
+
+  /**
+   * 获取当前切片所在平面和 Volume Box 的交点
+   *
+   * @returns 包含交点的 Point3 数组
+   */
+  public getSlicePlaneIntersectionWithVolumeBox(): Point3[] {
+    const imageData = this.getImageData();
+    if (!imageData) {
+      return [];
+    }
+
+    const { dimensions } = imageData;
+    const [sx, sy, sz] = dimensions;
+
+    // 1. Get the 8 corners of the volume in index space
+    const ijkCorners: Point3[] = [
+      [0, 0, 0],
+      [sx - 1, 0, 0],
+      [0, sy - 1, 0],
+      [sx - 1, sy - 1, 0],
+      [0, 0, sz - 1],
+      [sx - 1, 0, sz - 1],
+      [0, sy - 1, sz - 1],
+      [sx - 1, sy - 1, sz - 1],
+    ];
+
+    // 2. Transform corners to world space
+    const worldCorners = ijkCorners.map((ijk) =>
+      transformIndexToWorld(imageData.imageData, ijk)
+    );
+
+    // 3. Define the edges (pairs of indices into worldCorners)
+    const edges = [
+      [0, 1],
+      [1, 3],
+      [3, 2],
+      [2, 0], // Front face
+      [4, 5],
+      [5, 7],
+      [7, 6],
+      [6, 4], // Back face
+      [0, 4],
+      [1, 5],
+      [2, 6],
+      [3, 7], // Connecting edges
+    ];
+
+    // 4. Intersect each edge with the plane
+    const { viewPlaneNormal, focalPoint } = this.getCamera();
+    const intersections: Point3[] = [];
+
+    // 计算一组线段和平面的交点
+    edges.forEach(([startIndex, endIndex]) => {
+      const p1 = worldCorners[startIndex];
+      const p2 = worldCorners[endIndex];
+
+      const dir = vec3.sub(vec3.create(), p2, p1);
+      const dotDirNormal = vec3.dot(dir, viewPlaneNormal);
+
+      // If line is parallel to plane, no intersection (or infinite if contained)
+      if (Math.abs(dotDirNormal) < 1e-6) {
+        return;
+      }
+
+      const diff = vec3.sub(vec3.create(), focalPoint, p1);
+
+      const t = vec3.dot(diff, viewPlaneNormal) / dotDirNormal;
+
+      if (t >= 0 && t <= 1) {
+        const intersection = vec3.scaleAndAdd(vec3.create(), p1, dir, t);
+        intersections.push(intersection as Point3);
+      }
+    });
+
+    // Deduplicate points
+    const uniqueIntersections: Point3[] = [];
+    intersections.forEach((point) => {
+      const exists = uniqueIntersections.some(
+        (p) => vec3.dist(p, point) < 1e-3
+      );
+      if (!exists) {
+        uniqueIntersections.push(point);
+      }
+    });
+
+    return uniqueIntersections;
+  }
+
+  /**
+   * 获取当前切片所在平面和 Volume Box 的交点的中心点，并转换为画布坐标
+   * 计算多边形的面积重心 (Centroid of Polygon Area)
+   *
+   * @returns 中心点的画布坐标 Point2
+   */
+  public getSlicePlaneIntersectionCenterPointCanvas(): Point2 | null {
+    const intersections = this.getSlicePlaneIntersectionWithVolumeBox();
+    if (intersections.length === 0) {
+      return null;
+    }
+
+    // 1. Calculate the geometric center (mean) to use as a reference point for sorting
+    const mean = vec3.create();
+    intersections.forEach((p) => vec3.add(mean, mean, p));
+    vec3.scale(mean, mean, 1 / intersections.length);
+
+    // If less than 3 points, the mean is the "centroid" (point or line segment)
+    if (intersections.length < 3) {
+      return this.worldToCanvas(mean as Point3);
+    }
+
+    // 2. Define a local 2D coordinate system on the slice plane
+    const { viewPlaneNormal } = this.getCamera();
+    // Create an arbitrary vector 'u' perpendicular to viewPlaneNormal
+    const up = Math.abs(viewPlaneNormal[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+    const u = vec3.create();
+    vec3.cross(u, viewPlaneNormal as vec3, up as vec3); // u = normal x up
+    vec3.normalize(u, u);
+
+    const v = vec3.create();
+    vec3.cross(v, viewPlaneNormal as vec3, u); // v = normal x u
+    vec3.normalize(v, v);
+
+    // 3. Project points to the 2D plane and sort them angularly
+    const projected = intersections.map((p) => {
+      const diff = vec3.sub(vec3.create(), p, mean);
+      const x = vec3.dot(diff, u);
+      const y = vec3.dot(diff, v);
+      return { p, x, y, angle: Math.atan2(y, x) };
+    });
+
+    // Sort by angle to get a valid polygon winding
+    projected.sort((a, b) => a.angle - b.angle);
+
+    // 4. 计算多边形的质心（面积质心）非自相交闭合多边形的质心公式
+    let cx = 0;
+    let cy = 0;
+    let area = 0;
+
+    const n = projected.length;
+
+    for (let i = 0; i < n; i++) {
+      const current = projected[i];
+      const next = projected[(i + 1) % n];
+
+      const crossProduct = current.x * next.y - next.x * current.y;
+      area += crossProduct;
+      cx += (current.x + next.x) * crossProduct;
+      cy += (current.y + next.y) * crossProduct;
+    }
+
+    // 如果面积接近于零（共线点），则退回到平均值
+    if (Math.abs(area) < 1e-6) {
+      return this.worldToCanvas(mean as Point3);
+    }
+
+    area *= 0.5;
+    cx /= 6 * area;
+    cy /= 6 * area;
+
+    // 5. 将局部二维质心转换回三维世界坐标
+    // Center3D = Mean + cx * u + cy * v
+    const center3D = vec3.create();
+    vec3.scaleAndAdd(center3D, mean, u, cx);
+    vec3.scaleAndAdd(center3D, center3D, v, cy);
+
+    return this.worldToCanvas(center3D as Point3);
   }
 
   /**

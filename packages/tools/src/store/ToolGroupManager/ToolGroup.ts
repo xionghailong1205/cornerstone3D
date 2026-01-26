@@ -634,15 +634,14 @@ export default class ToolGroup {
         toolName === 'StackScroll' ||
         toolName === 'WindowLevel' ||
         toolName === 'TrackballRotate' ||
-        toolName === 'PlanarRotateOpVer'
+        toolName === 'PlanarRotateOpVer' ||
+        toolName === 'VolumeOpacityPointShiftTool'
       ) {
         cursor = MouseCursor.getDefinedCursor('default');
         return cursor;
       }
 
-      cursorName = `AnnotationPencil`;
-
-      cursor = SVGMouseCursor.getDefinedCursor(cursorName, false);
+      cursor = SVGMouseCursor.getDefinedCursor('AnnotationPencil', false);
       return cursor;
     }
 

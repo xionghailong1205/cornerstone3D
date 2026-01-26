@@ -593,6 +593,35 @@ abstract class BaseVolumeViewport extends Viewport {
     triggerEvent(this.element, Events.CAMERA_MODIFIED, eventDetail);
   };
 
+  rotateViewport(rotation: number) {
+    const panFit = this.getPan(this.fitToCanvasCamera);
+    const pan = this.getPan();
+    const panSub = vec2.sub([0, 0], panFit, pan) as Point2;
+    this.setPan(panSub, false);
+    const { flipVertical } = this.getCamera();
+
+    // Moving back to zero rotation, for new scrolled slice rotation is 0 after camera reset
+    const initialViewUp = flipVertical
+      ? vec3.negate([0, 0, 0], this.initialViewUp)
+      : this.initialViewUp;
+
+    this.setCameraNoEvent({
+      viewUp: initialViewUp as Point3,
+    });
+
+    // rotating camera to the new value
+    this.rotateCamera(rotation);
+    const afterPan = this.getPan();
+    const afterPanFit = this.getPan(this.fitToCanvasCamera);
+    const newCenter = vec2.sub([0, 0], afterPan, afterPanFit);
+    const newOffset = vec2.add([0, 0], panFit, newCenter) as Point2;
+    this.setPan(newOffset, false);
+
+    if (this._suppressCameraModifiedEvents) {
+      return;
+    }
+  }
+
   private rotateCamera(rotation: number): void {
     const rotationToApply = rotation - this.getRotation();
     // rotating camera to the new value

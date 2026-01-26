@@ -26,13 +26,6 @@ function _setElementCursor(
       ? cursor
       : MouseCursor.getDefinedCursor('auto')
   ).getStyleProperty();
-
-  console.log(
-    (cursor instanceof MouseCursor
-      ? cursor
-      : MouseCursor.getDefinedCursor('auto')
-    ).getStyleProperty()
-  );
 }
 
 function resetElementCursor(element: HTMLDivElement): void {
