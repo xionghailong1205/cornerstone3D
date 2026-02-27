@@ -102,6 +102,7 @@ class ScaleOverlayTool extends AnnotationDisplayTool {
 
     // if annotations have been created, get the annotation for the
     // current viewport Id
+    // 如果已创建注解，则获取当前视口 ID 对应的注解。
     if (annotations.length) {
       annotation = annotations.filter(
         (thisAnnotation) => thisAnnotation.data?.viewportId == viewport.id
@@ -110,6 +111,7 @@ class ScaleOverlayTool extends AnnotationDisplayTool {
 
     // viewportsWithAnnotations stores which viewports have an annotation,
     // if the viewport does not have an annotation, create a new one
+    // viewportWithAnnotations 存储了哪些视口具有注解，如果视口没有注解，则创建一个新的注解。
     enabledElements.forEach((element) => {
       const { viewport } = element;
       if (!viewportsWithAnnotations.includes(viewport.id)) {
