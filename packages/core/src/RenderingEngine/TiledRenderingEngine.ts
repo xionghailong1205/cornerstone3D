@@ -335,9 +335,9 @@ class TiledRenderingEngine extends BaseRenderingEngine {
       }
     });
 
-    // 4. If render is immediate: Render all
+    // 4. If render is immediate: Render only resized viewports
     if (immediate) {
-      this.render();
+      this.renderViewports(vtkDrivenViewports.map((vp) => vp.id));
     }
   }
 

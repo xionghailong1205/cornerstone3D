@@ -15,7 +15,6 @@ import vtkOpenGLSphereMapper from '@kitware/vtk.js/Rendering/OpenGL/SphereMapper
 import vtkOpenGLStickMapper from '@kitware/vtk.js/Rendering/OpenGL/StickMapper';
 import vtkOpenGLTexture from '@kitware/vtk.js/Rendering/OpenGL/Texture';
 import vtkOpenGLVolume from '@kitware/vtk.js/Rendering/OpenGL/Volume';
-import vtkOpenGLVolumeMapper from '@kitware/vtk.js/Rendering/OpenGL/VolumeMapper';
 import vtkViewNodeFactory from '@kitware/vtk.js/Rendering/SceneGraph/ViewNodeFactory';
 import vtkStreamingOpenGLVolumeMapper from './vtkStreamingOpenGLVolumeMapper';
 
@@ -131,7 +130,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   registerOverride('vtkStickMapper', vtkOpenGLStickMapper.newInstance);
   registerOverride('vtkTexture', vtkOpenGLTexture.newInstance);
   registerOverride('vtkVolume', vtkOpenGLVolume.newInstance);
-  registerOverride('vtkVolumeMapper', vtkOpenGLVolumeMapper.newInstance);
+  registerOverride(
+    'vtkVolumeMapper',
+    vtkStreamingOpenGLVolumeMapper.newInstance
+  );
   registerOverride(
     'vtkSharedVolumeMapper',
     vtkStreamingOpenGLVolumeMapper.newInstance

@@ -109,6 +109,32 @@ addDropdownToToolbar({
   },
 });
 
+addDropdownToToolbar({
+  options: {
+    values: [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4],
+    defaultValue: 1,
+  },
+  onSelectedValueChange: (imageSampleDistance) => {
+    const renderingEngine = getRenderingEngine(renderingEngineId);
+    const viewport = renderingEngine.getViewport(
+      viewportId
+    ) as Types.IVolumeViewport;
+
+    viewport.getActors().forEach((actorEntry) => {
+      const mapper = (actorEntry.actor as Types.VolumeActor).getMapper?.() as {
+        setImageSampleDistance?: (value: number) => void;
+        setSampleDistance?: (value: number) => void;
+      };
+
+      if (mapper?.setImageSampleDistance) {
+        mapper.setImageSampleDistance(Number(imageSampleDistance));
+      }
+    });
+
+    viewport.render();
+  },
+});
+
 // ============================= //
 
 /**

@@ -240,7 +240,7 @@ class ContextPoolRenderingEngine extends BaseRenderingEngine {
     });
 
     if (immediate) {
-      this.render();
+      this.renderViewports(vtkDrivenViewports.map((vp) => vp.id));
     }
   }
 

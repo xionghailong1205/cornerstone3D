@@ -54,8 +54,12 @@ class RenderingEngine {
     return this._implementation.setViewports(publicViewportInputEntries);
   }
 
-  public resize(immediate = true, keepCamera = true): void {
-    return this._implementation.resize(immediate, keepCamera);
+  public resize(
+    immediate = true,
+    keepCamera = true,
+    viewportIds?: string[]
+  ): void {
+    return this._implementation.resize(immediate, keepCamera, viewportIds);
   }
 
   public getViewport(viewportId: string): IViewport {

@@ -4,6 +4,7 @@ import { VtkDataTypes } from '@kitware/vtk.js/Common/Core/DataArray/Constants';
 import vtkOpenGLVolumeMapper from '@kitware/vtk.js/Rendering/OpenGL/VolumeMapper';
 import vtkOpenGLTexture from '@kitware/vtk.js/Rendering/OpenGL/Texture';
 import { Filter } from '@kitware/vtk.js/Rendering/OpenGL/Texture/Constants';
+import { InterpolationType } from '@kitware/vtk.js/Rendering/Core/VolumeProperty/Constants';
 import { getTransferFunctionsHash } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constants';
 import { BlendMode } from '@kitware/vtk.js/Rendering/Core/VolumeMapper/Constants';
@@ -124,6 +125,73 @@ function vtkStreamingOpenGLVolumeMapper(publicAPI, model) {
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
+  };
+
+  publicAPI.renderPieceStart = (ren, actor) => {
+    if (!model._lastScale) {
+      model._lastScale = model.renderable.getInitialInteractionScale();
+    }
+
+    const imageSampleDistance = model.renderable.getImageSampleDistance();
+    model._lastScale = Math.max(1.0, imageSampleDistance * imageSampleDistance);
+    model._useSmallViewport = Math.abs(imageSampleDistance - 1.0) > 1.0e-6;
+
+    if (model._useSmallViewport) {
+      const size = model._openGLRenderWindow.getFramebufferSize();
+      const scaleFactor = 1 / Math.sqrt(model._lastScale);
+      model._smallViewportWidth = Math.ceil(scaleFactor * size[0]);
+      model._smallViewportHeight = Math.ceil(scaleFactor * size[1]);
+
+      if (model._smallViewportHeight > size[1]) {
+        model._smallViewportHeight = size[1];
+      }
+      if (model._smallViewportWidth > size[0]) {
+        model._smallViewportWidth = size[0];
+      }
+      model.framebuffer.saveCurrentBindingsAndBuffers();
+
+      if (model.framebuffer.getGLFramebuffer() === null) {
+        model.framebuffer.create(size[0], size[1]);
+        model.framebuffer.populateFramebuffer();
+      } else {
+        const fbSize = model.framebuffer.getSize();
+        if (!fbSize || fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+          model.framebuffer.create(size[0], size[1]);
+          model.framebuffer.populateFramebuffer();
+        }
+      }
+      model.framebuffer.bind();
+      const gl = model.context;
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.colorMask(true, true, true, true);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.viewport(0, 0, model._smallViewportWidth, model._smallViewportHeight);
+      model.fvp = [
+        model._smallViewportWidth / size[0],
+        model._smallViewportHeight / size[1],
+      ];
+    }
+    model.context.disable(model.context.DEPTH_TEST);
+
+    publicAPI.updateBufferObjects(ren, actor);
+
+    const volumeProperties = actor.getProperties();
+    model.currentValidInputs.forEach(({ inputIndex }) => {
+      const volumeProperty = volumeProperties[inputIndex];
+      const interpolationType = volumeProperty.getInterpolationType();
+      const scalarTexture = model.scalarTextures[inputIndex];
+      if (interpolationType === InterpolationType.NEAREST) {
+        scalarTexture.setMinificationFilter(Filter.NEAREST);
+        scalarTexture.setMagnificationFilter(Filter.NEAREST);
+      } else {
+        scalarTexture.setMinificationFilter(Filter.LINEAR);
+        scalarTexture.setMagnificationFilter(Filter.LINEAR);
+      }
+    });
+
+    if (model.zBufferTexture !== null) {
+      model.zBufferTexture.activate();
+    }
   };
 
   /**

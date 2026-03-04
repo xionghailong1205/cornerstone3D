@@ -286,11 +286,19 @@ abstract class BaseRenderingEngine {
    *
    * @param immediate - Whether all of the viewports should be rendered immediately.
    * @param keepCamera - Whether to keep the camera for other viewports while resizing the offscreen canvas
+   * @param viewportIds - Optional list of viewport IDs to resize. If omitted, all viewports are resized.
    */
-  public resize(immediate = true, keepCamera = true): void {
+  public resize(
+    immediate = true,
+    keepCamera = true,
+    viewportIds?: string[]
+  ): void {
     this._throwIfDestroyed();
-    // 1. Get the viewports' canvases
-    const viewports = this._getViewportsAsArray();
+    // 1. Get the viewports to resize
+    const allViewports = this._getViewportsAsArray();
+    const viewports = viewportIds
+      ? allViewports.filter((vp) => viewportIds.includes(vp.id))
+      : allViewports;
 
     const vtkDrivenViewports = [];
     const customRenderingViewports = [];
@@ -562,9 +570,9 @@ abstract class BaseRenderingEngine {
       }
     });
 
-    // 2. If render is immediate: Render all
+    // 2. If render is immediate: Render only resized custom viewports
     if (immediate) {
-      this.render();
+      this.renderViewports(customRenderingViewports.map((vp) => vp.id));
     }
   }
 
