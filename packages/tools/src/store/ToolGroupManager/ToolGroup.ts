@@ -635,7 +635,8 @@ export default class ToolGroup {
         toolName === 'WindowLevel' ||
         toolName === 'TrackballRotate' ||
         toolName === 'PlanarRotateOpVer' ||
-        toolName === 'VolumeOpacityPointShiftTool'
+        toolName === 'VolumeOpacityPointShiftTool' ||
+        toolName === 'PanVR'
       ) {
         cursor = MouseCursor.getDefinedCursor('default');
         return cursor;
